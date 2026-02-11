@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Live video monitoring with real-time AI crime detection">
+  <meta name="theme-color" content="#0f172a">
+  <title>Live Monitor — CrimeVision AI</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/monitor.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- TensorFlow.js + Models -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+</head>
+<body class="page-monitor">
+
+  <!-- ========== SIDEBAR NAVIGATION ========== -->
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+    <div class="sidebar__header">
+      <a href="dashboard.html" class="sidebar__logo">
+        <i data-lucide="shield-alert" class="sidebar__logo-icon"></i>
+        <span class="sidebar__logo-text">CrimeVision</span>
+      </a>
+      <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i data-lucide="panel-left-close" id="sidebarToggleIcon"></i>
+      </button>
+    </div>
+    <nav class="sidebar__nav">
+      <ul class="sidebar__menu" role="menubar">
+        <li class="sidebar__item" role="none">
+          <a href="dashboard.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+            <span class="sidebar__label">Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar__item sidebar__item--active" role="none">
+          <a href="live-monitor.html" class="sidebar__link" role="menuitem" aria-current="page">
+            <i data-lucide="video" aria-hidden="true"></i>
+            <span class="sidebar__label">Live Monitor</span>
+            <span class="sidebar__badge sidebar__badge--live">LIVE</span>
+          </a>
+        </li>
+        <li class="sidebar__item" role="none">
+          <a href="upload-analyze.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="upload" aria-hidden="true"></i>
+            <span class="sidebar__label">Upload &amp; Analyze</span>
+          </a>
+        </li>
+        <li class="sidebar__item" role="none">
+          <a href="history.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="history" aria-hidden="true"></i>
+            <span class="sidebar__label">Detection History</span>
+          </a>
+        </li>
+        <li class="sidebar__divider" role="separator"></li>
+        <li class="sidebar__item" role="none">
+          <a href="settings.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="settings" aria-hidden="true"></i>
+            <span class="sidebar__label">Settings</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="sidebar__user" id="sidebarUser">
+        <div class="sidebar__avatar"><i data-lucide="user"></i></div>
+        <div class="sidebar__user-info">
+          <span class="sidebar__user-name" id="userName">Operator</span>
+          <span class="sidebar__user-role" id="userRole">Surveillance</span>
+        </div>
+        <button class="sidebar__logout" id="logoutBtn" aria-label="Sign out">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== MOBILE HEADER ========== -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="mobile-header__menu" id="mobileMenuBtn" aria-label="Open menu">
+      <i data-lucide="menu"></i>
+    </button>
+    <a href="dashboard.html" class="mobile-header__logo">
+      <i data-lucide="shield-alert"></i>
+      <span>CrimeVision</span>
+    </a>
+    <button class="mobile-header__notifications" id="mobileNotifBtn" aria-label="Notifications">
+      <i data-lucide="bell"></i>
+      <span class="notification-dot" id="mobileNotifDot" hidden></span>
+    </button>
+  </header>
+  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== TOP BAR ===== -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <h1 class="topbar__title">
+          <span class="topbar__live-dot"></span>
+          Live Monitor
+        </h1>
+        <p class="topbar__subtitle" id="currentDateTime"></p>
+      </div>
+      <div class="topbar__right">
+        <button class="topbar__icon-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
+          <i data-lucide="maximize" id="fullscreenIcon"></i>
+        </button>
+        <button class="topbar__icon-btn" id="themeToggleBtn" aria-label="Toggle theme">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== MODEL LOADING STATUS ===== -->
+    <div class="model-loader" id="modelLoader">
+      <div class="model-loader__content">
+        <div class="model-loader__spinner"></div>
+        <h2 class="model-loader__title">Loading AI Models</h2>
+        <p class="model-loader__subtitle">Preparing detection engines...</p>
+        <div class="model-loader__progress">
+          <div class="model-loader__bar">
+            <div class="model-loader__fill" id="modelLoadProgress"></div>
+          </div>
+          <span class="model-loader__percent" id="modelLoadPercent">0%</span>
+        </div>
+        <div class="model-loader__steps">
+          <div class="model-loader__step" id="stepTFJS">
+            <span class="model-loader__step-dot"></span>
+            <span>TensorFlow.js Runtime</span>
+          </div>
+          <div class="model-loader__step" id="stepCOCO">
+            <span class="model-loader__step-dot"></span>
+            <span>COCO-SSD Object Detection</span>
+          </div>
+          <div class="model-loader__step" id="stepClassifier">
+            <span class="model-loader__step-dot"></span>
+            <span>Crime Classifier</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MONITOR LAYOUT ===== -->
+    <div class="monitor-layout" id="monitorLayout" hidden>
+
+      <!-- LEFT: Video Feed Area -->
+      <section class="monitor-video" aria-label="Video feed">
+
+        <!-- Video Controls Top Bar -->
+        <div class="monitor-video__topbar">
+          <div class="monitor-video__source-info">
+            <span class="monitor-video__source-dot" id="sourceStatusDot"></span>
+            <span class="monitor-video__source-label" id="sourceLabel">No Source</span>
+          </div>
+          <div class="monitor-video__stats">
+            <span class="monitor-video__stat">
+              <i data-lucide="cpu" aria-hidden="true"></i>
+              <span id="fpsDisplay">0 FPS</span>
+            </span>
+            <span class="monitor-video__stat">
+              <i data-lucide="clock" aria-hidden="true"></i>
+              <span id="uptimeDisplay">00:00:00</span>
+            </span>
+            <span class="monitor-video__stat" id="resolutionStat">
+              <i data-lucide="monitor" aria-hidden="true"></i>
+              <span id="resolutionDisplay">—</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Video + Canvas Container -->
+        <div class="monitor-video__container" id="videoContainer">
+          <!-- Webcam/Video Element -->
+          <video 
+            id="videoFeed" 
+            class="monitor-video__feed" 
+            autoplay 
+            playsinline 
+            muted
+          ></video>
+          <!-- Detection Overlay Canvas (same dimensions as video) -->
+          <canvas 
+            id="detectionCanvas" 
+            class="monitor-video__canvas"
+            aria-label="Detection overlay"
+          ></canvas>
+
+          <!-- No Source Placeholder -->
+          <div class="monitor-video__placeholder" id="videoPlaceholder">
+            <i data-lucide="video-off" aria-hidden="true"></i>
+            <h3>No Video Source</h3>
+            <p>Select a camera or provide a stream URL to begin monitoring</p>
+          </div>
+
+          <!-- Recording Indicator -->
+          <div class="monitor-video__recording" id="recordingIndicator" hidden>
+            <span class="monitor-video__rec-dot"></span>
+            <span>REC</span>
+          </div>
+
+          <!-- Detection Alert Flash -->
+          <div class="monitor-video__alert-flash" id="alertFlash" hidden>
+            <i data-lucide="alert-triangle" aria-hidden="true"></i>
+            <span id="alertFlashText">CRIME DETECTED</span>
+          </div>
+        </div>
+
+        <!-- Video Controls Bottom Bar -->
+        <div class="monitor-video__controls">
+          <div class="monitor-video__controls-left">
+            <!-- Camera Source Select -->
+            <div class="form-group form-group--inline">
+              <label for="cameraSelect" class="sr-only">Camera source</label>
+              <select id="cameraSelect" class="form-input form-select form-select--sm">
+                <option value="" disabled selected>Select Camera</option>
+              </select>
+            </div>
+
+            <!-- Or Stream URL -->
+            <div class="form-group form-group--inline">
+              <input 
+                type="url" 
+                id="streamUrlInput" 
+                class="form-input form-input--sm" 
+                placeholder="Stream URL (RTSP/HLS)"
+                aria-label="Stream URL"
+              >
+              <button class="btn btn--outline btn--sm" id="connectStreamBtn">
+                <i data-lucide="link" aria-hidden="true"></i>
+                <span>Connect</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="monitor-video__controls-center">
+            <!-- Start/Stop Camera -->
+            <button class="btn btn--primary" id="startCameraBtn">
+              <i data-lucide="play" aria-hidden="true" id="cameraToggleIcon"></i>
+              <span id="cameraToggleText">Start Camera</span>
+            </button>
+
+            <!-- Start/Stop Detection -->
+            <button class="btn btn--outline" id="toggleDetectionBtn" disabled>
+              <i data-lucide="scan" aria-hidden="true" id="detectionToggleIcon"></i>
+              <span id="detectionToggleText">Start Detection</span>
+            </button>
+
+            <!-- Screenshot -->
+            <button class="btn btn--ghost" id="screenshotBtn" disabled aria-label="Take screenshot">
+              <i data-lucide="camera" aria-hidden="true"></i>
+            </button>
+
+            <!-- Record -->
+            <button class="btn btn--ghost" id="recordBtn" disabled aria-label="Toggle recording">
+              <i data-lucide="circle" aria-hidden="true" id="recordIcon"></i>
+            </button>
+          </div>
+
+          <div class="monitor-video__controls-right">
+            <!-- Confidence Threshold -->
+            <div class="form-group form-group--inline">
+              <label for="confidenceSlider" class="form-label form-label--sm">Threshold</label>
+              <input 
+                type="range" 
+                id="confidenceSlider" 
+                class="form-range" 
+                min="50" max="100" value="80" step="5"
+                aria-label="Confidence threshold"
+              >
+              <span class="form-range__value" id="confidenceValue">80%</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT: Detection Info Panel -->
+      <aside class="monitor-panel" aria-label="Detection information">
+
+        <!-- Tabs -->
+        <div class="monitor-panel__tabs" role="tablist">
+          <button class="monitor-panel__tab monitor-panel__tab--active" role="tab" aria-selected="true" aria-controls="panelLive" id="tabLive">
+            <i data-lucide="activity" aria-hidden="true"></i>
+            Live Feed
+          </button>
+          <button class="monitor-panel__tab" role="tab" aria-selected="false" aria-controls="panelLog" id="tabLog">
+            <i data-lucide="list" aria-hidden="true"></i>
+            Event Log
+          </button>
+          <button class="monitor-panel__tab" role="tab" aria-selected="false" aria-controls="panelObjects" id="tabObjects">
+            <i data-lucide="box" aria-hidden="true"></i>
+            Objects
+          </button>
+        </div>
+
+        <!-- Tab Panel: Live Detection Info -->
+        <div class="monitor-panel__content" id="panelLive" role="tabpanel" aria-labelledby="tabLive">
+          
+          <!-- Current Detection Status -->
+          <div class="monitor-panel__status" id="detectionStatus">
+            <div class="monitor-panel__status-icon monitor-panel__status-icon--safe" id="statusIconContainer">
+              <i data-lucide="shield-check" id="statusIcon"></i>
+            </div>
+            <h3 class="monitor-panel__status-text" id="statusText">All Clear</h3>
+            <p class="monitor-panel__status-sub" id="statusSubtext">No threats detected</p>
+          </div>
+
+          <!-- Current Detection Card (shown on crime detection) -->
+          <div class="monitor-panel__detection-card" id="currentDetectionCard" hidden>
+            <div class="monitor-panel__detection-header">
+              <span class="crime-badge" id="currentCrimeType">—</span>
+              <span class="confidence-pill" id="currentConfidence">—%</span>
+            </div>
+            <div class="monitor-panel__detection-body">
+              <div class="monitor-panel__detection-row">
+                <i data-lucide="clock" aria-hidden="true"></i>
+                <span id="currentDetTime">—</span>
+              </div>
+              <div class="monitor-panel__detection-row">
+                <i data-lucide="box" aria-hidden="true"></i>
+                <span id="currentDetObjects">—</span>
+              </div>
+              <div class="monitor-panel__detection-row">
+                <i data-lucide="map-pin" aria-hidden="true"></i>
+                <span id="currentDetLocation">Frame region: —</span>
+              </div>
+            </div>
+            <div class="monitor-panel__detection-actions">
+              <button class="btn btn--sm btn--outline" id="dismissCurrentBtn">
+                <i data-lucide="x" aria-hidden="true"></i> Dismiss
+              </button>
+              <button class="btn btn--sm btn--primary" id="reportCurrentBtn">
+                <i data-lucide="flag" aria-hidden="true"></i> Report
+              </button>
+            </div>
+          </div>
+
+          <!-- Session Stats -->
+          <div class="monitor-panel__session-stats">
+            <h4 class="monitor-panel__section-title">Session Statistics</h4>
+            <div class="monitor-panel__stat-grid">
+              <div class="monitor-panel__stat">
+                <span class="monitor-panel__stat-value" id="sessionDetections">0</span>
+                <span class="monitor-panel__stat-label">Detections</span>
+              </div>
+              <div class="monitor-panel__stat">
+                <span class="monitor-panel__stat-value" id="sessionAlerts">0</span>
+                <span class="monitor-panel__stat-label">Alerts Sent</span>
+              </div>
+              <div class="monitor-panel__stat">
+                <span class="monitor-panel__stat-value" id="sessionFrames">0</span>
+                <span class="monitor-panel__stat-label">Frames Analyzed</span>
+              </div>
+              <div class="monitor-panel__stat">
+                <span class="monitor-panel__stat-value" id="sessionAvgConf">—%</span>
+                <span class="monitor-panel__stat-label">Avg Confidence</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Confidence Gauge -->
+          <div class="monitor-panel__gauge-section">
+            <h4 class="monitor-panel__section-title">Threat Level</h4>
+            <div class="threat-gauge" id="threatGauge">
+              <div class="threat-gauge__bar">
+                <div class="threat-gauge__fill" id="threatGaugeFill"></div>
+              </div>
+              <div class="threat-gauge__labels">
+                <span>Safe</span>
+                <span>Low</span>
+                <span>Medium</span>
+                <span>High</span>
+                <span>Critical</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tab Panel: Event Log -->
+        <div class="monitor-panel__content" id="panelLog" role="tabpanel" aria-labelledby="tabLog" hidden>
+          <div class="monitor-panel__log-controls">
+            <button class="btn btn--ghost btn--sm" id="clearLogBtn">
+              <i data-lucide="trash-2" aria-hidden="true"></i> Clear
+            </button>
+            <button class="btn btn--ghost btn--sm" id="exportLogBtn">
+              <i data-lucide="download" aria-hidden="true"></i> Export
+            </button>
+          </div>
+          <div class="event-log" id="eventLog" role="log" aria-live="polite">
+            <div class="event-log__empty">
+              <i data-lucide="file-text" aria-hidden="true"></i>
+              <p>Events will appear here during monitoring</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab Panel: Detected Objects -->
+        <div class="monitor-panel__content" id="panelObjects" role="tabpanel" aria-labelledby="tabObjects" hidden>
+          <div class="object-list" id="objectList">
+            <div class="object-list__empty">
+              <i data-lucide="box" aria-hidden="true"></i>
+              <p>No objects detected in current frame</p>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+  <!-- ========== SCREENSHOT PREVIEW MODAL ========== -->
+  <dialog id="screenshotModal" class="modal" aria-labelledby="screenshotModalTitle">
+    <div class="modal__overlay" data-close-modal></div>
+    <div class="modal__content">
+      <header class="modal__header">
+        <h3 class="modal__title" id="screenshotModalTitle">Screenshot Captured</h3>
+        <button class="modal__close" data-close-modal aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="modal__body">
+        <img id="screenshotPreview" src="" alt="Screenshot preview" class="screenshot-preview">
+        <div class="screenshot-meta" id="screenshotMeta">
+          <span id="screenshotTimestamp">—</span>
+          <span id="screenshotResolution">—</span>
+        </div>
+      </div>
+      <footer class="modal__footer">
+        <button class="btn btn--outline" data-close-modal>Cancel</button>
+        <button class="btn btn--primary" id="downloadScreenshot">
+          <i data-lucide="download" aria-hidden="true"></i>
+          <span>Download</span>
+        </button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- ========== TOAST CONTAINER ========== -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ========== AUDIO ALERT ========== -->
+  <audio id="alertAudio" preload="auto">
+    <source src="assets/sounds/alert.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script src="js/utils.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/video.js"></script>
+  <script src="js/detection.js"></script>
+  <script src="js/classifier.js"></script>
+  <script src="js/annotation.js"></script>
+  <script src="js/alerts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

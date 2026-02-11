@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI-powered Real-Time Crime Detection and Forecasting System using Deep Learning">
+  <meta name="author" content="Gayatry Sharma">
+  <meta name="theme-color" content="#0f172a">
+  <title>CrimeVision AI — Real-Time Crime Detection System</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="page-login">
+
+  <!-- ========== PRELOADER ========== -->
+  <div id="preloader" class="preloader" role="status" aria-label="Loading">
+    <div class="preloader__spinner">
+      <div class="preloader__ring"></div>
+      <div class="preloader__ring"></div>
+      <div class="preloader__ring"></div>
+    </div>
+    <p class="preloader__text">Initializing CrimeVision AI...</p>
+  </div>
+
+  <!-- ========== MAIN CONTAINER ========== -->
+  <main class="login-container">
+
+    <!-- LEFT PANEL — Branding / Hero -->
+    <section class="login-hero" aria-label="Product information">
+      <div class="login-hero__content">
+        <div class="login-hero__logo">
+          <i data-lucide="shield-alert" class="login-hero__icon"></i>
+          <h1 class="login-hero__title">CrimeVision AI</h1>
+        </div>
+        <p class="login-hero__subtitle">Real-Time Crime Detection &amp; Forecasting System</p>
+        <p class="login-hero__description">
+          Powered by deep learning models for automated video surveillance analysis, 
+          crime classification, and instant alert notifications.
+        </p>
+
+        <!-- Feature highlights -->
+        <ul class="login-hero__features" aria-label="Key features">
+          <li class="login-hero__feature">
+            <i data-lucide="video" aria-hidden="true"></i>
+            <span>Live CCTV &amp; Webcam Monitoring</span>
+          </li>
+          <li class="login-hero__feature">
+            <i data-lucide="brain" aria-hidden="true"></i>
+            <span>CNN + LSTM Deep Learning Models</span>
+          </li>
+          <li class="login-hero__feature">
+            <i data-lucide="bell-ring" aria-hidden="true"></i>
+            <span>Automated Alert Notifications</span>
+          </li>
+          <li class="login-hero__feature">
+            <i data-lucide="bar-chart-3" aria-hidden="true"></i>
+            <span>Crime Analytics Dashboard</span>
+          </li>
+          <li class="login-hero__feature">
+            <i data-lucide="map-pin" aria-hidden="true"></i>
+            <span>Nearest Station Routing</span>
+          </li>
+        </ul>
+
+        <div class="login-hero__badge">
+          <i data-lucide="graduation-cap" aria-hidden="true"></i>
+          <span>Research Project — Uttarakhand Open University</span>
+        </div>
+      </div>
+
+      <!-- Animated background elements -->
+      <div class="login-hero__bg" aria-hidden="true">
+        <div class="login-hero__grid"></div>
+        <div class="login-hero__pulse login-hero__pulse--1"></div>
+        <div class="login-hero__pulse login-hero__pulse--2"></div>
+        <div class="login-hero__pulse login-hero__pulse--3"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL — Login Form -->
+    <section class="login-form-section" aria-label="Login">
+      <div class="login-form-wrapper">
+
+        <!-- Mobile logo (visible on small screens) -->
+        <div class="login-mobile-logo">
+          <i data-lucide="shield-alert"></i>
+          <span>CrimeVision AI</span>
+        </div>
+
+        <header class="login-form__header">
+          <h2 class="login-form__title">Welcome Back</h2>
+          <p class="login-form__subtitle">Sign in to access the surveillance dashboard</p>
+        </header>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="login-form" novalidate autocomplete="on">
+
+          <!-- Email Field -->
+          <div class="form-group" id="emailGroup">
+            <label for="loginEmail" class="form-label">
+              <i data-lucide="mail" aria-hidden="true"></i>
+              Email Address
+            </label>
+            <input 
+              type="email" 
+              id="loginEmail" 
+              name="email"
+              class="form-input" 
+              placeholder="operator@crimevision.ai"
+              autocomplete="email"
+              required
+              aria-describedby="emailError"
+            >
+            <span class="form-error" id="emailError" role="alert" aria-live="polite"></span>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group" id="passwordGroup">
+            <label for="loginPassword" class="form-label">
+              <i data-lucide="lock" aria-hidden="true"></i>
+              Password
+            </label>
+            <div class="form-input-wrapper">
+              <input 
+                type="password" 
+                id="loginPassword" 
+                name="password"
+                class="form-input" 
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+                minlength="6"
+                aria-describedby="passwordError"
+              >
+              <button 
+                type="button" 
+                class="form-toggle-password" 
+                id="togglePassword"
+                aria-label="Toggle password visibility"
+              >
+                <i data-lucide="eye" id="eyeIcon"></i>
+              </button>
+            </div>
+            <span class="form-error" id="passwordError" role="alert" aria-live="polite"></span>
+          </div>
+
+          <!-- Remember Me + Forgot -->
+          <div class="form-row">
+            <label class="form-checkbox">
+              <input type="checkbox" id="rememberMe" name="remember">
+              <span class="form-checkbox__mark"></span>
+              <span class="form-checkbox__label">Remember me</span>
+            </label>
+            <a href="#" class="form-link" id="forgotPasswordLink">Forgot password?</a>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn--primary btn--full" id="loginBtn">
+            <span class="btn__text">Sign In</span>
+            <span class="btn__loader" aria-hidden="true">
+              <span class="btn__spinner"></span>
+            </span>
+            <i data-lucide="arrow-right" class="btn__icon" aria-hidden="true"></i>
+          </button>
+
+          <!-- Divider -->
+          <div class="form-divider">
+            <span>or</span>
+          </div>
+
+          <!-- Demo Access Button -->
+          <button type="button" class="btn btn--outline btn--full" id="demoAccessBtn">
+            <i data-lucide="play-circle" aria-hidden="true"></i>
+            <span>Launch Demo Mode</span>
+          </button>
+
+        </form>
+
+        <!-- Register Link -->
+        <p class="login-form__footer">
+          Don't have an account? 
+          <a href="#" class="form-link" id="registerLink">Request Access</a>
+        </p>
+
+        <!-- System Status -->
+        <div class="system-status" id="systemStatus">
+          <span class="system-status__dot system-status__dot--online"></span>
+          <span class="system-status__text">All systems operational</span>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========== TOAST NOTIFICATION CONTAINER ========== -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ========== REGISTER MODAL ========== -->
+  <dialog id="registerModal" class="modal" aria-labelledby="registerModalTitle">
+    <div class="modal__overlay" data-close-modal></div>
+    <div class="modal__content">
+      <header class="modal__header">
+        <h3 class="modal__title" id="registerModalTitle">Request Access</h3>
+        <button class="modal__close" data-close-modal aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <form id="registerForm" class="modal__body" novalidate>
+
+        <div class="form-group">
+          <label for="regName" class="form-label">Full Name</label>
+          <input type="text" id="regName" class="form-input" placeholder="Enter your name" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regEmail" class="form-label">Email Address</label>
+          <input type="email" id="regEmail" class="form-input" placeholder="you@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="regPassword" class="form-label">Password</label>
+          <input type="password" id="regPassword" class="form-input" placeholder="Min 6 characters" required minlength="6">
+        </div>
+
+        <div class="form-group">
+          <label for="regRole" class="form-label">Role</label>
+          <select id="regRole" class="form-input form-select" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="admin">Administrator</option>
+            <option value="operator">Surveillance Operator</option>
+            <option value="analyst">Crime Analyst</option>
+            <option value="viewer">Viewer (Read-only)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="regOrg" class="form-label">Organization / Station</label>
+          <input type="text" id="regOrg" class="form-input" placeholder="Police station / Organization name">
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full">
+          <span>Submit Request</span>
+          <i data-lucide="send" aria-hidden="true"></i>
+        </button>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- ========== FORGOT PASSWORD MODAL ========== -->
+  <dialog id="forgotPasswordModal" class="modal" aria-labelledby="forgotModalTitle">
+    <div class="modal__overlay" data-close-modal></div>
+    <div class="modal__content modal__content--sm">
+      <header class="modal__header">
+        <h3 class="modal__title" id="forgotModalTitle">Reset Password</h3>
+        <button class="modal__close" data-close-modal aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="modal__body">
+        <p class="modal__description">Enter your email address and we'll send you a reset link.</p>
+        <form id="forgotPasswordForm" novalidate>
+          <div class="form-group">
+            <label for="forgotEmail" class="form-label">Email Address</label>
+            <input type="email" id="forgotEmail" class="form-input" placeholder="you@example.com" required>
+          </div>
+          <button type="submit" class="btn btn--primary btn--full">
+            <span>Send Reset Link</span>
+            <i data-lucide="mail" aria-hidden="true"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script src="js/utils.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

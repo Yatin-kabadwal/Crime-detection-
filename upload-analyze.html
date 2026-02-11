@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Upload and analyze video files for crime detection using AI">
+  <meta name="theme-color" content="#0f172a">
+  <title>Upload &amp; Analyze — CrimeVision AI</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/monitor.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- TensorFlow.js + Models -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body class="page-upload">
+
+  <!-- ========== SIDEBAR NAVIGATION ========== -->
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+    <div class="sidebar__header">
+      <a href="dashboard.html" class="sidebar__logo">
+        <i data-lucide="shield-alert" class="sidebar__logo-icon"></i>
+        <span class="sidebar__logo-text">CrimeVision</span>
+      </a>
+      <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i data-lucide="panel-left-close" id="sidebarToggleIcon"></i>
+      </button>
+    </div>
+    <nav class="sidebar__nav">
+      <ul class="sidebar__menu" role="menubar">
+        <li class="sidebar__item" role="none">
+          <a href="dashboard.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+            <span class="sidebar__label">Dashboard</span>
+          </a>
+        </li>
+        <li class="sidebar__item" role="none">
+          <a href="live-monitor.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="video" aria-hidden="true"></i>
+            <span class="sidebar__label">Live Monitor</span>
+            <span class="sidebar__badge sidebar__badge--live">LIVE</span>
+          </a>
+        </li>
+        <li class="sidebar__item sidebar__item--active" role="none">
+          <a href="upload-analyze.html" class="sidebar__link" role="menuitem" aria-current="page">
+            <i data-lucide="upload" aria-hidden="true"></i>
+            <span class="sidebar__label">Upload &amp; Analyze</span>
+          </a>
+        </li>
+        <li class="sidebar__item" role="none">
+          <a href="history.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="history" aria-hidden="true"></i>
+            <span class="sidebar__label">Detection History</span>
+          </a>
+        </li>
+        <li class="sidebar__divider" role="separator"></li>
+        <li class="sidebar__item" role="none">
+          <a href="settings.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="settings" aria-hidden="true"></i>
+            <span class="sidebar__label">Settings</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    <div class="sidebar__footer">
+      <div class="sidebar__user" id="sidebarUser">
+        <div class="sidebar__avatar"><i data-lucide="user"></i></div>
+        <div class="sidebar__user-info">
+          <span class="sidebar__user-name" id="userName">Operator</span>
+          <span class="sidebar__user-role" id="userRole">Surveillance</span>
+        </div>
+        <button class="sidebar__logout" id="logoutBtn" aria-label="Sign out">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== MOBILE HEADER ========== -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="mobile-header__menu" id="mobileMenuBtn" aria-label="Open menu"><i data-lucide="menu"></i></button>
+    <a href="dashboard.html" class="mobile-header__logo"><i data-lucide="shield-alert"></i><span>CrimeVision</span></a>
+    <button class="mobile-header__notifications" id="mobileNotifBtn" aria-label="Notifications">
+      <i data-lucide="bell"></i><span class="notification-dot" id="mobileNotifDot" hidden></span>
+    </button>
+  </header>
+  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== TOP BAR ===== -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <h1 class="topbar__title">Upload &amp; Analyze</h1>
+        <p class="topbar__subtitle">Analyze recorded video files for crime detection</p>
+      </div>
+      <div class="topbar__right">
+        <button class="topbar__icon-btn" id="themeToggleBtn" aria-label="Toggle theme">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===== UPLOAD SECTION ===== -->
+    <section class="upload-section" id="uploadSection" aria-label="Video upload">
+
+      <!-- Drag & Drop Zone -->
+      <div class="upload-dropzone" id="uploadDropzone" role="button" tabindex="0" aria-label="Upload video file">
+        <input 
+          type="file" 
+          id="videoFileInput" 
+          class="upload-dropzone__input" 
+          accept="video/mp4,video/avi,video/mov,video/webm,video/x-msvideo,video/quicktime"
+          aria-describedby="uploadHint"
+        >
+        <div class="upload-dropzone__content" id="dropzoneContent">
+          <div class="upload-dropzone__icon">
+            <i data-lucide="upload-cloud" aria-hidden="true"></i>
+          </div>
+          <h2 class="upload-dropzone__title">Drop your video file here</h2>
+          <p class="upload-dropzone__subtitle">or click to browse files</p>
+          <p class="upload-dropzone__hint" id="uploadHint">
+            Supports MP4, AVI, MOV, WebM — Max 500MB
+          </p>
+        </div>
+
+        <!-- File Selected State -->
+        <div class="upload-dropzone__selected" id="dropzoneSelected" hidden>
+          <div class="upload-dropzone__file-info">
+            <i data-lucide="film" aria-hidden="true"></i>
+            <div class="upload-dropzone__file-details">
+              <span class="upload-dropzone__filename" id="selectedFileName">—</span>
+              <span class="upload-dropzone__filesize" id="selectedFileSize">—</span>
+            </div>
+            <button class="btn btn--ghost btn--sm" id="removeFileBtn" aria-label="Remove file">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Options -->
+      <div class="upload-options" id="uploadOptions" hidden>
+        <div class="upload-options__grid">
+
+          <div class="form-group">
+            <label for="analysisMode" class="form-label">
+              <i data-lucide="sliders" aria-hidden="true"></i>
+              Analysis Mode
+            </label>
+            <select id="analysisMode" class="form-input form-select">
+              <option value="full">Full Analysis (Every frame)</option>
+              <option value="fast" selected>Fast Analysis (Every 5th frame)</option>
+              <option value="keyframe">Keyframe Only (Scene changes)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="uploadConfThreshold" class="form-label">
+              <i data-lucide="target" aria-hidden="true"></i>
+              Confidence Threshold
+            </label>
+            <div class="form-range-wrapper">
+              <input type="range" id="uploadConfThreshold" class="form-range" min="50" max="100" value="75" step="5">
+              <span class="form-range__value" id="uploadConfValue">75%</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i data-lucide="filter" aria-hidden="true"></i>
+              Crime Types to Detect
+            </label>
+            <div class="form-checkbox-grid">
+              <label class="form-checkbox">
+                <input type="checkbox" name="crimeTypes" value="violence" checked>
+                <span class="form-checkbox__mark"></span>
+                <span>Violence</span>
+              </label>
+              <label class="form-checkbox">
+                <input type="checkbox" name="crimeTypes" value="theft" checked>
+                <span class="form-checkbox__mark"></span>
+                <span>Theft</span>
+              </label>
+              <label class="form-checkbox">
+                <input type="checkbox" name="crimeTypes" value="fighting" checked>
+                <span class="form-checkbox__mark"></span>
+                <span>Fighting</span>
+              </label>
+              <label class="form-checkbox">
+                <input type="checkbox" name="crimeTypes" value="vandalism" checked>
+                <span class="form-checkbox__mark"></span>
+                <span>Vandalism</span>
+              </label>
+              <label class="form-checkbox">
+                <input type="checkbox" name="crimeTypes" value="robbery" checked>
+                <span class="form-checkbox__mark"></span>
+                <span>Robbery</span>
+              </label>
+              <label class="form-checkbox">
+                <input type="checkbox" name="crimeTypes" value="suspicious" checked>
+                <span class="form-checkbox__mark"></span>
+                <span>Suspicious</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+        <button class="btn btn--primary btn--lg" id="startAnalysisBtn">
+          <i data-lucide="play" aria-hidden="true"></i>
+          <span>Start Analysis</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ===== ANALYSIS IN PROGRESS ===== -->
+    <section class="analysis-progress" id="analysisProgress" hidden aria-label="Analysis in progress">
+
+      <div class="analysis-progress__video-area">
+        <!-- Hidden video element for frame extraction -->
+        <video id="uploadedVideo" class="analysis-progress__video" muted></video>
+        <canvas id="uploadCanvas" class="analysis-progress__canvas"></canvas>
+
+        <!-- Playback controls -->
+        <div class="analysis-progress__controls">
+          <button class="btn btn--ghost btn--sm" id="pauseAnalysisBtn">
+            <i data-lucide="pause" aria-hidden="true" id="pauseAnalysisIcon"></i>
+            <span id="pauseAnalysisText">Pause</span>
+          </button>
+          <button class="btn btn--ghost btn--sm btn--danger" id="stopAnalysisBtn">
+            <i data-lucide="square" aria-hidden="true"></i>
+            <span>Stop</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="analysis-progress__info">
+        <h2 class="analysis-progress__title">Analyzing Video...</h2>
+        <div class="analysis-progress__bar-wrapper">
+          <div class="analysis-progress__bar">
+            <div class="analysis-progress__fill" id="analysisProgressFill"></div>
+          </div>
+          <span class="analysis-progress__percent" id="analysisPercent">0%</span>
+        </div>
+        <div class="analysis-progress__stats">
+          <div class="analysis-progress__stat">
+            <span class="analysis-progress__stat-label">Frames Analyzed</span>
+            <span class="analysis-progress__stat-value" id="analysisFrames">0</span>
+          </div>
+          <div class="analysis-progress__stat">
+            <span class="analysis-progress__stat-label">Detections Found</span>
+            <span class="analysis-progress__stat-value" id="analysisDetections">0</span>
+          </div>
+          <div class="analysis-progress__stat">
+            <span class="analysis-progress__stat-label">Time Elapsed</span>
+            <span class="analysis-progress__stat-value" id="analysisElapsed">00:00</span>
+          </div>
+          <div class="analysis-progress__stat">
+            <span class="analysis-progress__stat-label">ETA</span>
+            <span class="analysis-progress__stat-value" id="analysisETA">Calculating...</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== ANALYSIS RESULTS ===== -->
+    <section class="analysis-results" id="analysisResults" hidden aria-label="Analysis results">
+
+      <!-- Results Summary Header -->
+      <div class="analysis-results__header">
+        <div class="analysis-results__header-left">
+          <h2 class="analysis-results__title">Analysis Complete</h2>
+          <p class="analysis-results__subtitle" id="resultsSubtitle">—</p>
+        </div>
+        <div class="analysis-results__header-right">
+          <button class="btn btn--outline" id="newAnalysisBtn">
+            <i data-lucide="plus" aria-hidden="true"></i>
+            <span>New Analysis</span>
+          </button>
+          <button class="btn btn--primary" id="exportResultsBtn">
+            <i data-lucide="download" aria-hidden="true"></i>
+            <span>Export Report</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Stats Cards -->
+      <div class="analysis-results__summary">
+        <div class="result-stat-card">
+          <i data-lucide="film" aria-hidden="true"></i>
+          <span class="result-stat-card__value" id="resultTotalFrames">0</span>
+          <span class="result-stat-card__label">Frames Analyzed</span>
+        </div>
+        <div class="result-stat-card result-stat-card--alert">
+          <i data-lucide="alert-triangle" aria-hidden="true"></i>
+          <span class="result-stat-card__value" id="resultTotalDetections">0</span>
+          <span class="result-stat-card__label">Crimes Detected</span>
+        </div>
+        <div class="result-stat-card">
+          <i data-lucide="clock" aria-hidden="true"></i>
+          <span class="result-stat-card__value" id="resultDuration">—</span>
+          <span class="result-stat-card__label">Video Duration</span>
+        </div>
+        <div class="result-stat-card">
+          <i data-lucide="target" aria-hidden="true"></i>
+          <span class="result-stat-card__value" id="resultAvgConf">—%</span>
+          <span class="result-stat-card__label">Avg Confidence</span>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="analysis-results__charts">
+        <div class="chart-card">
+          <div class="chart-card__header">
+            <h3 class="chart-card__title">Crime Types Found</h3>
+          </div>
+          <div class="chart-card__body chart-card__body--centered">
+            <canvas id="resultDistributionChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card chart-card--wide">
+          <div class="chart-card__header">
+            <h3 class="chart-card__title">Detection Timeline (by video timestamp)</h3>
+          </div>
+          <div class="chart-card__body">
+            <canvas id="resultTimelineChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detection List / Timeline -->
+      <div class="analysis-results__detections">
+        <div class="analysis-results__detections-header">
+          <h3 class="analysis-results__detections-title">
+            <i data-lucide="list" aria-hidden="true"></i>
+            All Detections
+          </h3>
+          <div class="analysis-results__detections-filter">
+            <select id="resultTypeFilter" class="form-input form-select form-select--sm" aria-label="Filter by type">
+              <option value="all">All Types</option>
+              <option value="violence">Violence</option>
+              <option value="theft">Theft</option>
+              <option value="fighting">Fighting</option>
+              <option value="vandalism">Vandalism</option>
+              <option value="robbery">Robbery</option>
+              <option value="suspicious">Suspicious</option>
+            </select>
+            <select id="resultSortBy" class="form-input form-select form-select--sm" aria-label="Sort by">
+              <option value="time">Sort by Time</option>
+              <option value="confidence">Sort by Confidence</option>
+              <option value="type">Sort by Type</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="detection-grid" id="resultDetectionGrid">
+          <!-- Populated by JS: detection cards with thumbnails -->
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ========== TOAST CONTAINER ========== -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script src="js/utils.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/detection.js"></script>
+  <script src="js/classifier.js"></script>
+  <script src="js/annotation.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

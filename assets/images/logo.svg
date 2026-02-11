@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer glow circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#glowGrad)"/>
+
+  <!-- Shield body -->
+  <path d="M100 18 L168 52 L168 108 C168 148 140 176 100 190 C60 176 32 148 32 108 L32 52 Z"
+        fill="url(#shieldGrad)" filter="url(#glow)" opacity="0.95"/>
+
+  <!-- Shield inner border -->
+  <path d="M100 28 L158 58 L158 108 C158 142 134 166 100 178 C66 166 42 142 42 108 L42 58 Z"
+        fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+
+  <!-- AI Eye - outer ring -->
+  <circle cx="100" cy="100" r="36" fill="none" stroke="white" stroke-width="3" opacity="0.9"/>
+
+  <!-- AI Eye - inner iris -->
+  <circle cx="100" cy="100" r="20" fill="rgba(255,255,255,0.15)" stroke="white" stroke-width="2"/>
+
+  <!-- AI Eye - pupil -->
+  <circle cx="100" cy="100" r="9" fill="white"/>
+
+  <!-- Scan lines -->
+  <line x1="60" y1="100" x2="76" y2="100" stroke="white" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+  <line x1="124" y1="100" x2="140" y2="100" stroke="white" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+  <line x1="100" y1="60" x2="100" y2="76" stroke="white" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+  <line x1="100" y1="124" x2="100" y2="140" stroke="white" stroke-width="2" opacity="0.6" stroke-linecap="round"/>
+
+  <!-- Corner scan brackets - top left -->
+  <path d="M64 72 L64 62 L74 62" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+
+  <!-- Corner scan brackets - top right -->
+  <path d="M126 62 L136 62 L136 72" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+
+  <!-- Corner scan brackets - bottom left -->
+  <path d="M64 128 L64 138 L74 138" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+
+  <!-- Corner scan brackets - bottom right -->
+  <path d="M126 138 L136 138 L136 128" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+
+  <!-- Small detection dots -->
+  <circle cx="82" cy="82" r="2.5" fill="white" opacity="0.5"/>
+  <circle cx="118" cy="82" r="2.5" fill="white" opacity="0.5"/>
+  <circle cx="82" cy="118" r="2.5" fill="white" opacity="0.5"/>
+  <circle cx="118" cy="118" r="2.5" fill="white" opacity="0.5"/>
+</svg>

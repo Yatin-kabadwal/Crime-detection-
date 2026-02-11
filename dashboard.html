@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CrimeVision AI Dashboard — Real-time crime detection analytics and monitoring">
+  <meta name="theme-color" content="#0f172a">
+  <title>Dashboard — CrimeVision AI</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+</head>
+<body class="page-dashboard">
+
+  <!-- ========== SIDEBAR NAVIGATION ========== -->
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+    <div class="sidebar__header">
+      <a href="dashboard.html" class="sidebar__logo">
+        <i data-lucide="shield-alert" class="sidebar__logo-icon"></i>
+        <span class="sidebar__logo-text">CrimeVision</span>
+      </a>
+      <button class="sidebar__toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i data-lucide="panel-left-close" id="sidebarToggleIcon"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar__nav">
+      <ul class="sidebar__menu" role="menubar">
+
+        <li class="sidebar__item sidebar__item--active" role="none">
+          <a href="dashboard.html" class="sidebar__link" role="menuitem" aria-current="page">
+            <i data-lucide="layout-dashboard" aria-hidden="true"></i>
+            <span class="sidebar__label">Dashboard</span>
+          </a>
+        </li>
+
+        <li class="sidebar__item" role="none">
+          <a href="live-monitor.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="video" aria-hidden="true"></i>
+            <span class="sidebar__label">Live Monitor</span>
+            <span class="sidebar__badge sidebar__badge--live" id="liveIndicator">LIVE</span>
+          </a>
+        </li>
+
+        <li class="sidebar__item" role="none">
+          <a href="upload-analyze.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="upload" aria-hidden="true"></i>
+            <span class="sidebar__label">Upload &amp; Analyze</span>
+          </a>
+        </li>
+
+        <li class="sidebar__item" role="none">
+          <a href="history.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="history" aria-hidden="true"></i>
+            <span class="sidebar__label">Detection History</span>
+          </a>
+        </li>
+
+        <li class="sidebar__divider" role="separator"></li>
+
+        <li class="sidebar__item" role="none">
+          <a href="settings.html" class="sidebar__link" role="menuitem">
+            <i data-lucide="settings" aria-hidden="true"></i>
+            <span class="sidebar__label">Settings</span>
+          </a>
+        </li>
+
+      </ul>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="sidebar__footer">
+      <div class="sidebar__user" id="sidebarUser">
+        <div class="sidebar__avatar" id="userAvatar" aria-hidden="true">
+          <i data-lucide="user"></i>
+        </div>
+        <div class="sidebar__user-info">
+          <span class="sidebar__user-name" id="userName">Operator</span>
+          <span class="sidebar__user-role" id="userRole">Surveillance</span>
+        </div>
+        <button class="sidebar__logout" id="logoutBtn" aria-label="Sign out">
+          <i data-lucide="log-out"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== MOBILE HEADER ========== -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="mobile-header__menu" id="mobileMenuBtn" aria-label="Open menu">
+      <i data-lucide="menu"></i>
+    </button>
+    <a href="dashboard.html" class="mobile-header__logo">
+      <i data-lucide="shield-alert"></i>
+      <span>CrimeVision</span>
+    </a>
+    <button class="mobile-header__notifications" id="mobileNotifBtn" aria-label="Notifications">
+      <i data-lucide="bell"></i>
+      <span class="notification-dot" id="mobileNotifDot" hidden></span>
+    </button>
+  </header>
+
+  <!-- ========== MOBILE SIDEBAR OVERLAY ========== -->
+  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+  <!-- ========== MAIN CONTENT ========== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ===== TOP BAR ===== -->
+    <header class="topbar">
+      <div class="topbar__left">
+        <h1 class="topbar__title">Dashboard</h1>
+        <p class="topbar__subtitle" id="currentDateTime"></p>
+      </div>
+      <div class="topbar__right">
+        <!-- Search -->
+        <div class="topbar__search">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <input 
+            type="search" 
+            id="globalSearch" 
+            class="topbar__search-input" 
+            placeholder="Search detections..."
+            aria-label="Search detections"
+          >
+        </div>
+
+        <!-- Notification Bell -->
+        <button class="topbar__icon-btn" id="notificationBtn" aria-label="View notifications">
+          <i data-lucide="bell"></i>
+          <span class="notification-badge" id="notifBadge" hidden>0</span>
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button class="topbar__icon-btn" id="fullscreenBtn" aria-label="Toggle fullscreen">
+          <i data-lucide="maximize" id="fullscreenIcon"></i>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button class="topbar__icon-btn" id="themeToggleBtn" aria-label="Toggle theme">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+
+        <!-- User Dropdown -->
+        <div class="topbar__user-dropdown" id="userDropdown">
+          <button class="topbar__user-btn" id="userDropdownBtn" aria-expanded="false" aria-haspopup="true">
+            <div class="topbar__user-avatar">
+              <i data-lucide="user"></i>
+            </div>
+            <i data-lucide="chevron-down" class="topbar__chevron"></i>
+          </button>
+          <div class="dropdown-menu" id="userDropdownMenu" role="menu" hidden>
+            <div class="dropdown-menu__header">
+              <span class="dropdown-menu__name" id="dropdownUserName">Operator</span>
+              <span class="dropdown-menu__email" id="dropdownUserEmail">operator@crimevision.ai</span>
+            </div>
+            <a href="settings.html" class="dropdown-menu__item" role="menuitem">
+              <i data-lucide="settings" aria-hidden="true"></i>
+              <span>Settings</span>
+            </a>
+            <button class="dropdown-menu__item dropdown-menu__item--danger" id="dropdownLogout" role="menuitem">
+              <i data-lucide="log-out" aria-hidden="true"></i>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== AI MODEL STATUS BAR ===== -->
+    <div class="model-status-bar" id="modelStatusBar">
+      <div class="model-status-bar__item">
+        <span class="model-status-bar__dot model-status-bar__dot--loading" id="cocoStatusDot"></span>
+        <span class="model-status-bar__label">COCO-SSD</span>
+        <span class="model-status-bar__state" id="cocoStatusText">Loading...</span>
+      </div>
+      <div class="model-status-bar__item">
+        <span class="model-status-bar__dot model-status-bar__dot--loading" id="poseStatusDot"></span>
+        <span class="model-status-bar__label">MoveNet</span>
+        <span class="model-status-bar__state" id="poseStatusText">Loading...</span>
+      </div>
+      <div class="model-status-bar__item">
+        <span class="model-status-bar__dot" id="alertStatusDot"></span>
+        <span class="model-status-bar__label">Alert System</span>
+        <span class="model-status-bar__state" id="alertStatusText">Standby</span>
+      </div>
+      <div class="model-status-bar__item">
+        <i data-lucide="cpu" aria-hidden="true" class="model-status-bar__icon"></i>
+        <span class="model-status-bar__label">FPS:</span>
+        <span class="model-status-bar__state model-status-bar__state--mono" id="fpsCounter">0</span>
+      </div>
+    </div>
+
+    <!-- ===== STATS CARDS ROW ===== -->
+    <section class="stats-grid" aria-label="Detection statistics">
+
+      <div class="stat-card stat-card--total" id="statTotalDetections">
+        <div class="stat-card__icon">
+          <i data-lucide="scan-eye" aria-hidden="true"></i>
+        </div>
+        <div class="stat-card__content">
+          <span class="stat-card__value" id="totalDetectionsValue">0</span>
+          <span class="stat-card__label">Total Detections</span>
+        </div>
+        <div class="stat-card__trend" id="totalDetectionsTrend">
+          <i data-lucide="trending-up" aria-hidden="true"></i>
+          <span>—</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--critical" id="statCriticalAlerts">
+        <div class="stat-card__icon">
+          <i data-lucide="alert-triangle" aria-hidden="true"></i>
+        </div>
+        <div class="stat-card__content">
+          <span class="stat-card__value" id="criticalAlertsValue">0</span>
+          <span class="stat-card__label">Critical Alerts</span>
+        </div>
+        <div class="stat-card__trend" id="criticalAlertsTrend">
+          <i data-lucide="trending-up" aria-hidden="true"></i>
+          <span>—</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--active" id="statActiveCameras">
+        <div class="stat-card__icon">
+          <i data-lucide="camera" aria-hidden="true"></i>
+        </div>
+        <div class="stat-card__content">
+          <span class="stat-card__value" id="activeCamerasValue">0</span>
+          <span class="stat-card__label">Active Feeds</span>
+        </div>
+        <div class="stat-card__trend">
+          <span class="stat-card__sub" id="activeCamerasSub">of 0 total</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-card--accuracy" id="statAccuracy">
+        <div class="stat-card__icon">
+          <i data-lucide="target" aria-hidden="true"></i>
+        </div>
+        <div class="stat-card__content">
+          <span class="stat-card__value" id="accuracyValue">—%</span>
+          <span class="stat-card__label">Avg Confidence</span>
+        </div>
+        <div class="stat-card__trend">
+          <span class="stat-card__sub" id="accuracySub">across all detections</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== CHARTS ROW ===== -->
+    <section class="charts-grid" aria-label="Analytics charts">
+
+      <!-- Crime Timeline Chart -->
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__header">
+          <h2 class="chart-card__title">
+            <i data-lucide="activity" aria-hidden="true"></i>
+            Detection Timeline
+          </h2>
+          <div class="chart-card__actions">
+            <select id="timelineRange" class="chart-card__select" aria-label="Time range">
+              <option value="24h">Last 24 Hours</option>
+              <option value="7d" selected>Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-card__body">
+          <canvas id="timelineChart" aria-label="Crime detection timeline chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Crime Type Distribution -->
+      <div class="chart-card">
+        <div class="chart-card__header">
+          <h2 class="chart-card__title">
+            <i data-lucide="pie-chart" aria-hidden="true"></i>
+            Crime Distribution
+          </h2>
+        </div>
+        <div class="chart-card__body chart-card__body--centered">
+          <canvas id="distributionChart" aria-label="Crime type distribution chart"></canvas>
+        </div>
+        <div class="chart-card__legend" id="distributionLegend"></div>
+      </div>
+
+    </section>
+
+    <!-- ===== SECOND CHARTS ROW ===== -->
+    <section class="charts-grid" aria-label="Additional analytics">
+
+      <!-- Confidence Distribution -->
+      <div class="chart-card">
+        <div class="chart-card__header">
+          <h2 class="chart-card__title">
+            <i data-lucide="bar-chart-2" aria-hidden="true"></i>
+            Confidence Distribution
+          </h2>
+        </div>
+        <div class="chart-card__body">
+          <canvas id="confidenceChart" aria-label="Confidence score distribution"></canvas>
+        </div>
+      </div>
+
+      <!-- Hourly Heatmap -->
+      <div class="chart-card chart-card--wide">
+        <div class="chart-card__header">
+          <h2 class="chart-card__title">
+            <i data-lucide="clock" aria-hidden="true"></i>
+            Hourly Crime Heatmap
+          </h2>
+        </div>
+        <div class="chart-card__body">
+          <canvas id="heatmapChart" aria-label="Hourly crime frequency heatmap"></canvas>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== RECENT DETECTIONS TABLE ===== -->
+    <section class="detections-section" aria-label="Recent detections">
+      <div class="detections-section__header">
+        <h2 class="detections-section__title">
+          <i data-lucide="list" aria-hidden="true"></i>
+          Recent Detections
+        </h2>
+        <div class="detections-section__actions">
+          <div class="detections-filter">
+            <select id="detectionTypeFilter" class="form-input form-select form-select--sm" aria-label="Filter by crime type">
+              <option value="all">All Types</option>
+              <option value="violence">Violence</option>
+              <option value="theft">Theft</option>
+              <option value="fighting">Fighting</option>
+              <option value="vandalism">Vandalism</option>
+              <option value="robbery">Robbery</option>
+              <option value="suspicious">Suspicious Activity</option>
+            </select>
+          </div>
+          <a href="history.html" class="btn btn--outline btn--sm">
+            <span>View All</span>
+            <i data-lucide="arrow-right" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table" id="recentDetectionsTable" aria-label="Recent crime detections">
+          <thead>
+            <tr>
+              <th scope="col" class="data-table__th--snap">Snapshot</th>
+              <th scope="col">Crime Type</th>
+              <th scope="col">Confidence</th>
+              <th scope="col">Source</th>
+              <th scope="col">Timestamp</th>
+              <th scope="col">Status</th>
+              <th scope="col" class="data-table__th--actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recentDetectionsBody">
+            <!-- Populated by JS -->
+            <tr class="data-table__empty-row" id="emptyTableRow">
+              <td colspan="7">
+                <div class="empty-state">
+                  <i data-lucide="inbox" aria-hidden="true"></i>
+                  <p>No detections recorded yet</p>
+                  <a href="live-monitor.html" class="btn btn--primary btn--sm">Start Monitoring</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== QUICK ACTIONS FLOATING PANEL ===== -->
+    <div class="quick-actions" id="quickActions">
+      <button class="quick-actions__main" id="quickActionsBtn" aria-label="Quick actions" aria-expanded="false">
+        <i data-lucide="plus" id="quickActionsIcon"></i>
+      </button>
+      <div class="quick-actions__menu" id="quickActionsMenu" hidden>
+        <a href="live-monitor.html" class="quick-actions__item" aria-label="Start live monitoring">
+          <i data-lucide="video"></i>
+          <span>Live Monitor</span>
+        </a>
+        <a href="upload-analyze.html" class="quick-actions__item" aria-label="Upload video">
+          <i data-lucide="upload"></i>
+          <span>Upload Video</span>
+        </a>
+        <button class="quick-actions__item" id="quickExport" aria-label="Export data">
+          <i data-lucide="download"></i>
+          <span>Export CSV</span>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========== NOTIFICATION PANEL (Slide-in) ========== -->
+  <aside class="notification-panel" id="notificationPanel" aria-label="Notifications" hidden>
+    <div class="notification-panel__header">
+      <h3 class="notification-panel__title">Notifications</h3>
+      <div class="notification-panel__actions">
+        <button class="btn btn--ghost btn--sm" id="markAllReadBtn">Mark all read</button>
+        <button class="notification-panel__close" id="closeNotifPanel" aria-label="Close notifications">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+    <div class="notification-panel__body" id="notificationList">
+      <!-- Populated by JS -->
+      <div class="notification-panel__empty" id="emptyNotifications">
+        <i data-lucide="bell-off" aria-hidden="true"></i>
+        <p>No new notifications</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========== DETECTION DETAIL MODAL ========== -->
+  <dialog id="detectionDetailModal" class="modal modal--lg" aria-labelledby="detDetailTitle">
+    <div class="modal__overlay" data-close-modal></div>
+    <div class="modal__content">
+      <header class="modal__header">
+        <h3 class="modal__title" id="detDetailTitle">Detection Details</h3>
+        <button class="modal__close" data-close-modal aria-label="Close modal">
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="modal__body">
+        <div class="detection-detail">
+          <div class="detection-detail__image">
+            <img id="detDetailSnapshot" src="" alt="Detection snapshot" class="detection-detail__img">
+            <div class="detection-detail__overlay" id="detDetailOverlay"></div>
+          </div>
+          <div class="detection-detail__info">
+            <div class="detection-detail__row">
+              <span class="detection-detail__label">Crime Type</span>
+              <span class="detection-detail__value" id="detDetailType">—</span>
+            </div>
+            <div class="detection-detail__row">
+              <span class="detection-detail__label">Confidence</span>
+              <div class="confidence-bar">
+                <div class="confidence-bar__fill" id="detDetailConfBar"></div>
+                <span class="confidence-bar__text" id="detDetailConf">—%</span>
+              </div>
+            </div>
+            <div class="detection-detail__row">
+              <span class="detection-detail__label">Source</span>
+              <span class="detection-detail__value" id="detDetailSource">—</span>
+            </div>
+            <div class="detection-detail__row">
+              <span class="detection-detail__label">Timestamp</span>
+              <span class="detection-detail__value" id="detDetailTime">—</span>
+            </div>
+            <div class="detection-detail__row">
+              <span class="detection-detail__label">Objects Detected</span>
+              <span class="detection-detail__value" id="detDetailObjects">—</span>
+            </div>
+            <div class="detection-detail__row">
+              <span class="detection-detail__label">Status</span>
+              <span class="detection-detail__value" id="detDetailStatus">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="modal__footer">
+        <button class="btn btn--outline" id="detDetailDismiss">Dismiss Alert</button>
+        <button class="btn btn--primary" id="detDetailExport">
+          <i data-lucide="download" aria-hidden="true"></i>
+          <span>Export Report</span>
+        </button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- ========== TOAST NOTIFICATION CONTAINER ========== -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ========== SCRIPTS ========== -->
+  <script src="js/utils.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
