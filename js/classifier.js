@@ -19,6 +19,21 @@ const CrimeClassifier = {
 
   // Crime classification rules based on detected objects
   RULES: [
+    // NEW RULE: Detect weapons even without person present
+    {
+      type: 'weapon_detected',
+      check(objects, context) {
+        const weapons = objects.filter(o => CrimeClassifier.WEAPON_CLASSES.includes(o.class));
+        if (weapons.length > 0) {
+          const maxWeaponScore = Math.max(...weapons.map(w => w.score || 0.5));
+          const baseConfidence = 0.85;
+          const scoreBonus = maxWeaponScore * 0.10;
+          return Math.min(baseConfidence + scoreBonus, 0.95);
+        }
+        return 0;
+      },
+    },
+    // EXISTING RULES (unchanged)
     {
       type: 'robbery',
       check(objects, context) {
@@ -218,6 +233,7 @@ const CrimeClassifier = {
 
   _getEnabledTypes() {
     const types = [];
+    if (getSetting('detectWeapon'))     types.push('weapon_detected'); // NEW
     if (getSetting('detectViolence'))   types.push('violence');
     if (getSetting('detectTheft'))      types.push('theft');
     if (getSetting('detectFighting'))   types.push('fighting');

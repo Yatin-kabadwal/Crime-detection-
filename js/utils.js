@@ -14,6 +14,7 @@ const STORAGE_PREFIX = 'cv_';
 
 const CRIME_TYPES = {
   violence:   { label: 'Violence',            color: '#ef4444', icon: 'sword' },
+  weapon_detected: { label: 'Weapon Detected',  color: '#dc2626', icon: 'alert-triangle' }, 
   theft:      { label: 'Theft',               color: '#f59e0b', icon: 'hand' },
   fighting:   { label: 'Fighting',            color: '#f97316', icon: 'swords' },
   vandalism:  { label: 'Vandalism',           color: '#8b5cf6', icon: 'hammer' },
@@ -36,6 +37,7 @@ const DEFAULT_SETTINGS = {
   frameSkip: 2,
   inputResolution: 416,
   detectViolence: true,
+  detectWeapon: true,
   detectTheft: true,
   detectFighting: true,
   detectVandalism: true,
