@@ -1,7 +1,16 @@
 /**
  * monitor.css — CrimeVision AI
  * Live Monitor, Upload & Analyze page-specific styles
+ * FIXED: Added proper hidden attribute handling for alert flash
  */
+
+/* ========================================
+   CRITICAL FIX: Hidden attribute support
+   ======================================== */
+
+[hidden] {
+  display: none !important;
+}
 
 /* ========================================
    MODEL LOADER (Initial Loading Screen)
@@ -269,12 +278,13 @@
   animation: pulse 1s infinite;
 }
 
+/* CRITICAL FIX: Alert flash should be hidden by default */
 .monitor-video__alert-flash {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: flex;
+  display: none; /* FIXED: Changed from flex to none */
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-md);
@@ -288,6 +298,11 @@
   backdrop-filter: blur(8px);
   animation: slideUp 0.3s ease-out;
   z-index: 10;
+}
+
+/* CRITICAL FIX: Only show when NOT hidden */
+.monitor-video__alert-flash:not([hidden]) {
+  display: flex;
 }
 
 .monitor-video__alert-flash i {
