@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detection Diagnostic Tool - CrimeVision</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 { color: #3b82f6; margin-bottom: 10px; }
+    h2 { color: #60a5fa; margin: 20px 0 10px; font-size: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+    .panel {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .status { 
+      padding: 10px; 
+      border-radius: 6px; 
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    .status.good { background: rgba(34, 197, 94, 0.2); border-left: 3px solid #22c55e; }
+    .status.bad { background: rgba(239, 68, 68, 0.2); border-left: 3px solid #ef4444; }
+    .status.warning { background: rgba(245, 158, 11, 0.2); border-left: 3px solid #f59e0b; }
+    .btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 5px;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn.secondary { background: #64748b; }
+    .btn.secondary:hover { background: #475569; }
+    .btn.danger { background: #ef4444; }
+    .btn.danger:hover { background: #dc2626; }
+    #console {
+      background: #000;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      height: 300px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .log-entry { margin: 3px 0; }
+    .log-error { color: #ef4444; }
+    .log-success { color: #22c55e; }
+    .log-warning { color: #f59e0b; }
+    .log-info { color: #60a5fa; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #334155; }
+    th { color: #3b82f6; font-weight: 600; }
+    video { width: 100%; border-radius: 6px; background: #000; }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 2px;
+    }
+    .badge.enabled { background: #22c55e; color: white; }
+    .badge.disabled { background: #ef4444; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Detection System Diagnostic Tool</h1>
+    <p style="color: #94a3b8; margin-bottom: 20px;">
+      This tool helps diagnose why your crime detection isn't working
+    </p>
+
+    <div class="grid">
+      <!-- Left Column: Camera & Detection -->
+      <div>
+        <div class="panel">
+          <h2>📹 Camera Feed</h2>
+          <video id="videoFeed" autoplay playsinline muted></video>
+          <div style="margin-top: 10px;">
+            <button class="btn" id="startBtn">Start Camera</button>
+            <button class="btn secondary" id="startDetectionBtn" disabled>Start Detection</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>🎯 Live Detections</h2>
+          <div id="liveDetections">No detections yet...</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Status & Diagnostics -->
+      <div>
+        <div class="panel">
+          <h2>⚙️ System Status</h2>
+          <div id="systemStatus">Loading...</div>
+        </div>
+
+        <div class="panel">
+          <h2>🧪 Detection Settings</h2>
+          <div id="settingsStatus">Loading...</div>
+        </div>
+
+        <div class="panel">
+          <h2>📊 Detection Rules</h2>
+          <div id="rulesStatus">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top: 20px;">
+      <h2>📝 Console Log</h2>
+      <div id="console"></div>
+      <button class="btn secondary" onclick="document.getElementById('console').innerHTML = ''">Clear Log</button>
+    </div>
+  </div>
+
+  <script>
+    // Console logging
+    function log(message, type = 'info') {
+      const console_el = document.getElementById('console');
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      console_el.appendChild(entry);
+      console_el.scrollTop = console_el.scrollHeight;
+      console.log(message);
+    }
+
+    // Check system status
+    function checkSystemStatus() {
+      const status = document.getElementById('systemStatus');
+      let html = '';
+
+      // Check TensorFlow.js
+      if (typeof tf !== 'undefined') {
+        html += '<div class="status good">✅ TensorFlow.js loaded</div>';
+        log('TensorFlow.js loaded', 'success');
+      } else {
+        html += '<div class="status bad">❌ TensorFlow.js NOT loaded</div>';
+        log('ERROR: TensorFlow.js not loaded', 'error');
+      }
+
+      // Check COCO-SSD
+      if (typeof cocoSsd !== 'undefined') {
+        html += '<div class="status good">✅ COCO-SSD library loaded</div>';
+        log('COCO-SSD library loaded', 'success');
+      } else {
+        html += '<div class="status bad">❌ COCO-SSD NOT loaded</div>';
+        log('ERROR: COCO-SSD not loaded', 'error');
+      }
+
+      // Check DetectionEngine
+      if (typeof DetectionEngine !== 'undefined') {
+        html += '<div class="status good">✅ DetectionEngine available</div>';
+        log('DetectionEngine available', 'success');
+      } else {
+        html += '<div class="status bad">❌ DetectionEngine NOT available</div>';
+        log('ERROR: DetectionEngine not available', 'error');
+      }
+
+      // Check CrimeClassifier
+      if (typeof CrimeClassifier !== 'undefined') {
+        html += '<div class="status good">✅ CrimeClassifier available</div>';
+        log('CrimeClassifier available', 'success');
+      } else {
+        html += '<div class="status bad">❌ CrimeClassifier NOT available</div>';
+        log('ERROR: CrimeClassifier not available', 'error');
+      }
+
+      status.innerHTML = html;
+    }
+
+    // Check settings
+    function checkSettings() {
+      const status = document.getElementById('settingsStatus');
+      if (typeof getSetting !== 'function') {
+        status.innerHTML = '<div class="status bad">❌ Settings system not available</div>';
+        return;
+      }
+
+      const settings = {
+        'Global Threshold': getSetting('globalConfThreshold'),
+        'Weapon Detection': getSetting('detectWeapon'),
+        'Violence Detection': getSetting('detectViolence'),
+        'Theft Detection': getSetting('detectTheft'),
+        'Fighting Detection': getSetting('detectFighting'),
+        'Robbery Detection': getSetting('detectRobbery'),
+        'Suspicious Detection': getSetting('detectSuspicious'),
+      };
+
+      let html = '<table>';
+      for (const [key, value] of Object.entries(settings)) {
+        const badge = typeof value === 'boolean' 
+          ? `<span class="badge ${value ? 'enabled' : 'disabled'}">${value ? 'ON' : 'OFF'}</span>`
+          : value + '%';
+        html += `<tr><td>${key}</td><td>${badge}</td></tr>`;
+      }
+      html += '</table>';
+
+      // Check for issues
+      let issues = [];
+      if (settings['Global Threshold'] > 70) {
+        issues.push('<div class="status warning">⚠️ Threshold > 70% may be too strict</div>');
+      }
+      if (!settings['Weapon Detection'] && !settings['Violence Detection'] && !settings['Suspicious Detection']) {
+        issues.push('<div class="status bad">❌ No detection types enabled!</div>');
+      }
+
+      status.innerHTML = html + issues.join('');
+    }
+
+    // Check rules
+    function checkRules() {
+      const status = document.getElementById('rulesStatus');
+      if (typeof CrimeClassifier === 'undefined') {
+        status.innerHTML = '<div class="status bad">❌ CrimeClassifier not available</div>';
+        return;
+      }
+
+      const rules = CrimeClassifier.RULES || [];
+      let html = `<p>Total rules: ${rules.length}</p>`;
+      html += '<table><tr><th>Type</th><th>Status</th></tr>';
+      
+      rules.forEach(rule => {
+        html += `<tr><td>${rule.type}</td><td><span class="badge enabled">Active</span></td></tr>`;
+      });
+      html += '</table>';
+
+      status.innerHTML = html;
+    }
+
+    // Camera controls
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      const video = document.getElementById('videoFeed');
+      const btn = document.getElementById('startBtn');
+      
+      if (video.srcObject) {
+        // Stop camera
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        btn.textContent = 'Start Camera';
+        document.getElementById('startDetectionBtn').disabled = true;
+        log('Camera stopped', 'info');
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        btn.textContent = 'Stop Camera';
+        document.getElementById('startDetectionBtn').disabled = false;
+        log('Camera started successfully', 'success');
+      } catch (err) {
+        log('ERROR: ' + err.message, 'error');
+      }
+    });
+
+    // Detection controls
+    document.getElementById('startDetectionBtn').addEventListener('click', async () => {
+      const video = document.getElementById('videoFeed');
+      const btn = document.getElementById('startDetectionBtn');
+      
+      log('Loading AI model...', 'info');
+      
+      try {
+        if (!DetectionEngine.isLoaded) {
+          await DetectionEngine.loadModel();
+          log('AI model loaded successfully', 'success');
+        }
+
+        // Start detection loop
+        let frameCount = 0;
+        const detect = async () => {
+          if (!video.srcObject) return;
+
+          try {
+            const predictions = await DetectionEngine.detectFrame(video);
+            frameCount++;
+
+            // Log detections
+            const liveDiv = document.getElementById('liveDetections');
+            if (predictions.length > 0) {
+              log(`Frame ${frameCount}: Found ${predictions.length} objects`, 'success');
+              
+              let html = `<strong>Frame ${frameCount}:</strong><br>`;
+              predictions.forEach(p => {
+                html += `- ${p.class}: ${Math.round(p.score * 100)}%<br>`;
+                log(`  → ${p.class} (${Math.round(p.score * 100)}%)`, 'info');
+              });
+              liveDiv.innerHTML = html;
+
+              // Try classification
+              if (typeof CrimeClassifier !== 'undefined') {
+                const classification = CrimeClassifier.classify(predictions);
+                log(`Classification: ${classification.crimeType} (${classification.confidence}%)`, 
+                    classification.crimeType !== 'normal' ? 'warning' : 'info');
+              }
+            } else {
+              if (frameCount % 30 === 0) {
+                log(`Frame ${frameCount}: No objects detected`, 'info');
+              }
+            }
+
+            requestAnimationFrame(detect);
+          } catch (err) {
+            log('Detection error: ' + err.message, 'error');
+          }
+        };
+
+        detect();
+        btn.disabled = true;
+        log('Detection started', 'success');
+
+      } catch (err) {
+        log('ERROR: ' + err.message, 'error');
+      }
+    });
+
+    // Initialize
+    window.addEventListener('load', () => {
+      log('Diagnostic tool initialized', 'success');
+      checkSystemStatus();
+      checkSettings();
+      checkRules();
+    });
+  </script>
+</body>
+</html>
